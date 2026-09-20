@@ -1,0 +1,24 @@
+# 依赖
+node_modules/
+
+# 构建产物
+target/
+public/
+db/
+
+# 数据
+mysql-data/
+
+# 日志
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 环境配置（如果有敏感信息）
+application-local.yml

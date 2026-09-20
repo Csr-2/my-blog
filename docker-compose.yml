@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: blog-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blog
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: blog-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./blog-backend
+    container_name: blog-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+
+  nginx:
+    image: nginx
+    container_name: blog-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./real-blog/public:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend

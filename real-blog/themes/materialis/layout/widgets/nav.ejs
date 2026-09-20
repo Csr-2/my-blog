@@ -1,0 +1,528 @@
+<!-- 文章导航按钮 -->
+<mdui-tooltip content="文章导航">
+  <mdui-button-icon id="toc-toggle" class="toc-toggle-icon">
+    <mdui-icon name="menu_book"></mdui-icon>
+  </mdui-button-icon>
+</mdui-tooltip>
+
+<!-- 文章导航弹窗 -->
+<mdui-dialog id="toc-dialog" close-on-esc close-on-overlay-click class="toc-dialog">
+  <!-- 顶部：文章信息 chip（整合自文章页头部） -->
+  <div class="toc-meta-section" id="toc-meta-section">
+    <div class="toc-meta-title"><%= page.title %></div>
+    <div class="toc-meta-chips">
+      <mdui-chip class="toc-meta-chip toc-chip-date" variant="filled">
+        <mdui-icon name="calendar_today" slot="icon"></mdui-icon>
+        <%= page.date.format('YYYY-MM-DD') %>
+      </mdui-chip>
+      <% if (page.categories && page.categories.length > 0) { %>
+      <mdui-chip class="toc-meta-chip toc-chip-cat" variant="filled">
+        <mdui-icon name="folder" slot="icon"></mdui-icon>
+        <%= page.categories.data[0].name %>
+      </mdui-chip>
+      <% } %>
+      <%
+        const _tocPlainText = strip_html(page.content);
+        const _tocWordCount = _tocPlainText ? _tocPlainText.length : 0;
+        const _tocReadTime = Math.max(1, Math.ceil(_tocWordCount / 300));
+      %>
+      <mdui-chip class="toc-meta-chip toc-chip-read" variant="filled">
+        <mdui-icon name="schedule" slot="icon"></mdui-icon>
+        <%= _tocReadTime %> <%= __('post.min_read') %>
+      </mdui-chip>
+      <mdui-chip class="toc-meta-chip toc-chip-words" variant="filled">
+        <mdui-icon name="text_snippet" slot="icon"></mdui-icon>
+        <%= _tocWordCount %> <%= __('post.words') %>
+      </mdui-chip>
+    </div>
+    <% if (page.tags && page.tags.length > 0) { %>
+    <div class="toc-meta-tags">
+      <% page.tags.data.forEach(function(tag) { %>
+        <mdui-chip class="toc-tag-chip" variant="filled" href="<%= url_for(tag.path) %>">
+          <mdui-icon name="sell" slot="icon"></mdui-icon>
+          <%= tag.name %>
+        </mdui-chip>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <mdui-divider class="toc-meta-divider"></mdui-divider>
+
+  <!-- 中部：目录列表 -->
+  <div class="toc-content">
+    <div class="toc-content-label">目录</div>
+    <div id="toc-container" class="toc-container">
+      <div class="toc-placeholder">
+        <mdui-icon name="menu_book"></mdui-icon>
+        <div class="toc-placeholder-text">正在解析标题…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toc-footer">
+    <span class="toc-count" id="toc-count"></span>
+    <mdui-button id="toc-close-btn" variant="tonal">关闭</mdui-button>
+  </div>
+</mdui-dialog>
+
+<style>
+.toc-dialog::part(overlay) {
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(0, 0, 0, 0.36);
+}
+
+.toc-dialog {
+    --mdui-dialog-width: 480px;
+    --mdui-dialog-height: 78vh;
+    --mdui-dialog-max-height: 82vh;
+}
+
+.toc-dialog::part(panel) {
+    animation: tocPanelIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tocPanelIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ===== 顶部信息区 ===== */
+.toc-meta-section {
+    padding: 20px 24px 12px;
+}
+
+.toc-meta-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: rgb(var(--mdui-color-on-surface));
+    margin-bottom: 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.toc-meta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.toc-meta-chip {
+    --mdui-chip-height: 28px;
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.toc-meta-chip mdui-icon {
+    font-size: 1rem;
+}
+
+.toc-chip-date {
+    background: rgb(var(--mdui-color-primary-container)) !important;
+    color: rgb(var(--mdui-color-on-primary-container)) !important;
+}
+
+.toc-chip-cat {
+    background: rgb(var(--mdui-color-secondary-container)) !important;
+    color: rgb(var(--mdui-color-on-secondary-container)) !important;
+}
+
+.toc-chip-read,
+.toc-chip-words {
+    background: rgb(var(--mdui-color-tertiary-container)) !important;
+    color: rgb(var(--mdui-color-on-tertiary-container)) !important;
+}
+
+.toc-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+}
+
+.toc-tag-chip {
+    --mdui-chip-height: 26px;
+    font-size: 0.74rem;
+    background: rgb(var(--mdui-color-surface-container-high)) !important;
+    color: rgb(var(--mdui-color-on-surface-variant)) !important;
+    text-decoration: none;
+}
+
+.toc-meta-divider {
+    margin: 0 24px;
+}
+
+/* ===== 目录内容区 ===== */
+.toc-content {
+    padding: 12px 24px 0;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.toc-content-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.toc-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--mdui-color-outline-variant)) transparent;
+}
+
+.toc-container::-webkit-scrollbar { width: 5px; }
+.toc-container::-webkit-scrollbar-track { background: transparent; }
+.toc-container::-webkit-scrollbar-thumb {
+    background: rgb(var(--mdui-color-outline-variant) / 0.5);
+    border-radius: 999px;
+}
+.toc-container::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--mdui-color-outline));
+}
+
+.toc-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.toc-placeholder mdui-icon {
+    font-size: 40px;
+    opacity: 0.4;
+    color: rgb(var(--mdui-color-primary));
+}
+
+.toc-placeholder-text {
+    font-size: 0.9rem;
+}
+
+/* ===== 目录树 ===== */
+.toc-tree {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.toc-tree ul {
+    list-style: none;
+    padding-left: 16px;
+    margin: 2px 0;
+    border-left: 1.5px solid rgba(var(--mdui-color-outline-variant), 0.4);
+}
+
+.toc-node {
+    margin: 2px 0;
+}
+
+.toc-link {
+    display: block;
+    padding: 7px 10px;
+    color: rgb(var(--mdui-color-on-surface));
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    cursor: pointer;
+    border: 1px solid transparent;
+    opacity: 0;
+    transform: translateX(-6px);
+    animation: tocLinkIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes tocLinkIn {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.toc-link:hover {
+    background: rgb(var(--mdui-color-surface-container-high));
+    transform: translateX(2px);
+}
+
+.toc-link.active {
+    background: rgb(var(--mdui-color-primary-container));
+    color: rgb(var(--mdui-color-on-primary-container));
+    font-weight: 500;
+    border-color: rgba(var(--mdui-color-primary), 0.2);
+}
+
+/* 按级别区分 */
+.toc-level-1 > .toc-link { font-weight: 600; font-size: 0.95rem; }
+.toc-level-2 > .toc-link { font-weight: 500; font-size: 0.9rem; }
+.toc-level-3 > .toc-link { font-size: 0.86rem; opacity: 0.92; }
+.toc-level-4 > .toc-link,
+.toc-level-5 > .toc-link,
+.toc-level-6 > .toc-link { font-size: 0.82rem; opacity: 0.82; padding-top: 5px; padding-bottom: 5px; }
+
+/* ===== 底部 ===== */
+.toc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    border-top: 1px solid rgba(var(--mdui-color-outline-variant), 0.5);
+}
+
+.toc-count {
+    font-size: 0.82rem;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    font-weight: 500;
+}
+
+.toc-toggle-icon {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toc-toggle-icon:hover {
+    color: rgb(var(--mdui-color-primary));
+    transform: rotate(-12deg) scale(1.1);
+}
+
+@media (max-width: 600px) {
+    .toc-dialog { --mdui-dialog-width: 94vw; --mdui-dialog-height: 82vh; }
+    .toc-meta-section { padding: 16px 18px 10px; }
+    .toc-content { padding: 10px 18px 0; }
+    .toc-footer { padding: 12px 18px; }
+    .toc-meta-divider { margin: 0 18px; }
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+
+  const throttle = (fn, wait) => {
+    let last = 0;
+    return function() {
+      const now = Date.now();
+      if (now - last > wait) { last = now; fn.apply(this, arguments); }
+    };
+  };
+
+  let headerCounter = 0;
+  const slugify = (text, idx) => {
+    const clean = text.trim().replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, '-');
+    if (/^[A-Za-z0-9\-_]+$/.test(clean) && clean.length > 0) return clean.substring(0, 40);
+    return 'heading-' + idx + '-' + (headerCounter++);
+  };
+
+  class HexoTOC {
+    constructor() {
+      this.dialog = document.getElementById('toc-dialog');
+      this.container = document.getElementById('toc-container');
+      this.countEl = document.getElementById('toc-count');
+      this.headers = [];
+      this.scrollBound = false;
+      this.init();
+    }
+
+    init() {
+      const toggle = document.getElementById('toc-toggle');
+      const closeBtn = document.getElementById('toc-close-btn');
+
+      if (toggle) toggle.addEventListener('click', () => this.open());
+      if (closeBtn) closeBtn.addEventListener('click', () => this.close());
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isOpen()) this.close();
+      });
+
+      // 页面加载后预生成目录
+      if (document.readyState !== 'loading') {
+        setTimeout(() => this.generate(), 50);
+      } else {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(() => this.generate(), 50), { once: true });
+      }
+      window.addEventListener('load', () => setTimeout(() => this.generate(), 100), { once: true });
+    }
+
+    open() {
+      this.dialog.open = true;
+      this.generate();
+    }
+
+    close() {
+      this.dialog.open = false;
+    }
+
+    isOpen() {
+      return this.dialog && this.dialog.open;
+    }
+
+    // 查找文章内容容器
+    findContent() {
+      const selectors = ['.article-content', '.markdown-section', '.post-body', 'article', '#article-container', '.post-content'];
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (el) return el;
+      }
+      return null;
+    }
+
+    generate() {
+      const content = this.findContent();
+      if (!content) {
+        this.showPlaceholder('未找到文章内容');
+        return;
+      }
+
+      // 提取标题，排除代码块内的假标题
+      const allHeaders = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      const headers = Array.from(allHeaders).filter(h => {
+        if (h.closest('.mac-code-block, pre, .gutter, figure.highlight, .toc-placeholder')) return false;
+        return true;
+      });
+
+      if (headers.length === 0) {
+        this.showPlaceholder('当前文章无标题');
+        return;
+      }
+
+      this.headers = headers;
+
+      // 分配 ID
+      headers.forEach((h, i) => {
+        if (!h.id) h.id = slugify(h.textContent || 'heading-' + i, i);
+      });
+
+      // 构建嵌套树
+      this.container.innerHTML = this.buildTree(headers);
+
+      // 更新计数
+      this.countEl.textContent = '共 ' + headers.length + ' 个标题';
+
+      // 绑定事件
+      this.bindLinks();
+
+      // 滚动高亮（只绑定一次）
+      if (!this.scrollBound) {
+        window.addEventListener('scroll', throttle(() => this.highlight(), 100), { passive: true });
+        this.scrollBound = true;
+      }
+      setTimeout(() => this.highlight(), 0);
+    }
+
+    // 用栈构建嵌套 ul/li 目录树
+    buildTree(headers) {
+      const root = { level: 0, children: [] };
+      const stack = [root];
+
+      headers.forEach((h, i) => {
+        const level = parseInt(h.tagName.charAt(1), 10);
+        const node = { level, id: h.id, text: h.textContent.trim(), children: [], index: i };
+        while (stack.length > 1 && stack[stack.length - 1].level >= level) stack.pop();
+        stack[stack.length - 1].children.push(node);
+        stack.push(node);
+      });
+
+      const render = (nodes) => {
+        if (!nodes || nodes.length === 0) return '';
+        let html = '<ul class="toc-tree">';
+        nodes.forEach(node => {
+          const hasChildren = node.children.length > 0;
+          html += '<li class="toc-node toc-level-' + node.level + '">' +
+            '<a href="#' + node.id + '" class="toc-link" data-target="' + node.id + '" style="animation-delay:' + Math.min(node.index * 20, 300) + 'ms">' +
+            this.escapeHtml(node.text) +
+            '</a>' +
+            render(node.children) +
+            '</li>';
+        });
+        html += '</ul>';
+        return html;
+      };
+
+      return render(root.children);
+    }
+
+    bindLinks() {
+      this.container.querySelectorAll('.toc-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = link.getAttribute('data-target');
+          const target = document.getElementById(id);
+          if (target) {
+            this.close();
+            setTimeout(() => {
+              const appbarH = document.querySelector('mdui-top-app-bar') ? document.querySelector('mdui-top-app-bar').offsetHeight : 64;
+              const y = target.getBoundingClientRect().top + window.pageYOffset - appbarH - 16;
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }, 120);
+          }
+        });
+      });
+    }
+
+    highlight() {
+      if (!this.headers || this.headers.length === 0) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const appbarH = document.querySelector('mdui-top-app-bar') ? document.querySelector('mdui-top-app-bar').offsetHeight : 64;
+      const offset = appbarH + 20;
+
+      let currentId = this.headers[0].id;
+      for (let i = 0; i < this.headers.length; i++) {
+        const top = this.headers[i].getBoundingClientRect().top + scrollY - offset;
+        if (scrollY >= top) currentId = this.headers[i].id;
+        else break;
+      }
+
+      const oldActive = this.container.querySelector('.toc-link.active');
+      const newActive = this.container.querySelector('.toc-link[data-target="' + currentId + '"]');
+      if (oldActive && oldActive !== newActive) oldActive.classList.remove('active');
+      if (newActive && !newActive.classList.contains('active')) {
+        newActive.classList.add('active');
+        // 自动滚入目录视野
+        const cs = this.container;
+        const lr = newActive.getBoundingClientRect();
+        const cr = cs.getBoundingClientRect();
+        if (lr.top < cr.top + 10 || lr.bottom > cr.bottom - 10) {
+          cs.scrollTo({
+            top: newActive.offsetTop - cs.clientHeight / 2 + newActive.clientHeight / 2,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+
+    showPlaceholder(msg) {
+      this.container.innerHTML =
+        '<div class="toc-placeholder">' +
+        '<mdui-icon name="menu_book"></mdui-icon>' +
+        '<div class="toc-placeholder-text">' + (msg || '暂无文章导航') + '</div>' +
+        '</div>';
+      if (this.countEl) this.countEl.textContent = '';
+    }
+
+    escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+  }
+
+  // 初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { window.hexoTOC = new HexoTOC(); }, { once: true });
+  } else {
+    window.hexoTOC = new HexoTOC();
+  }
+})();
+</script>

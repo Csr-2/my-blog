@@ -1,0 +1,1053 @@
+<%- js('js/fancybox.js') %>
+
+<style>
+.post-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.post-card-wide {
+    border-radius: 20px;
+    background-color: rgb(var(--mdui-color-surface-container-low));
+    box-shadow: none;
+}
+
+.post-card-comment {
+    border-radius: 20px;
+    background-color: rgb(var(--mdui-color-surface-container-low));
+    box-shadow: none;
+    padding: 2.5rem;
+}
+
+.post-card-nav {
+    border-radius: 20px;
+    background-color: rgb(var(--mdui-color-surface-container-low));
+    box-shadow: none;
+    padding: 2.5rem;
+}
+
+.markdown-section img,
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.2em auto;
+    object-fit: contain;
+    box-sizing: border-box;
+    border-radius: 12px;
+}
+
+.caption {
+  color: #444;
+  display: block;
+  font-size: 0.9em;
+  margin-top: 0.1em;
+  position: relative;
+  text-align: center;
+}
+
+.article-content {
+    color: rgb(var(--mdui-color-on-surface));
+    line-height: 1.8;
+    font-family: var(--mdui-font-family);
+    width: 100%;
+    overflow-wrap: break-word;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+    color: rgb(var(--mdui-color-primary));
+    margin-top: 1.5em;
+    margin-bottom: 1em;
+}
+
+.article-content p {
+    margin-bottom: 1.2em;
+}
+
+.article-content a {
+    color: rgb(var(--mdui-color-primary));
+    text-decoration: none;
+    border-bottom: 1px dashed rgb(var(--mdui-color-primary));
+}
+
+.article-content a:hover {
+    opacity: 0.8;
+}
+
+.article-content code {
+    background-color: rgb(var(--mdui-color-surface-container-high));
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--mdui-font-family-mono);
+    word-break: break-word;
+}
+
+/* 代码块样式见文件末尾「macOS 风格代码块」部分（已重构） */
+
+.article-content pre {
+    background-color: rgb(var(--mdui-color-surface-container-high));
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.article-content ul,
+.article-content ol {
+    padding-left: 32px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.article-content li {
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+/* ===== 阅读进度条（MD3 风格） ===== */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    z-index: 9999;
+    background: linear-gradient(90deg,
+        rgb(var(--mdui-color-primary)),
+        rgb(var(--mdui-color-tertiary)));
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 8px rgb(var(--mdui-color-primary) / 0.4);
+    transition: width 0.1s linear;
+    pointer-events: none;
+}
+
+/* ===== 文章头部元信息 ===== */
+.post-meta-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(var(--mdui-color-outline-variant), 0.6);
+}
+
+.post-meta-chip {
+    --mdui-chip-height: 30px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.post-meta-chip mdui-icon {
+    font-size: 1.05rem;
+}
+
+.post-meta-chip.date-chip {
+    background: rgb(var(--mdui-color-primary-container)) !important;
+    color: rgb(var(--mdui-color-on-primary-container)) !important;
+}
+
+.post-meta-chip.cat-chip {
+    background: rgb(var(--mdui-color-secondary-container)) !important;
+    color: rgb(var(--mdui-color-on-secondary-container)) !important;
+}
+
+.post-meta-chip.read-chip {
+    background: rgb(var(--mdui-color-tertiary-container)) !important;
+    color: rgb(var(--mdui-color-on-tertiary-container)) !important;
+}
+
+.post-meta-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.post-meta-tag-chip {
+    --mdui-chip-height: 28px;
+    font-size: 0.78rem;
+    background: rgb(var(--mdui-color-surface-container-high)) !important;
+    color: rgb(var(--mdui-color-on-surface-variant)) !important;
+}
+
+/* ===== 排版增强 ===== */
+
+/* 标题：左侧主色装饰条 */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+    position: relative;
+    padding-left: 14px;
+    line-height: 1.4;
+}
+
+.article-content h1::before,
+.article-content h2::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.15em;
+    bottom: 0.15em;
+    width: 4px;
+    border-radius: 2px;
+    background: linear-gradient(180deg,
+        rgb(var(--mdui-color-primary)),
+        rgb(var(--mdui-color-tertiary)));
+}
+
+.article-content h3::before,
+.article-content h4::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    bottom: 0.2em;
+    width: 3px;
+    border-radius: 2px;
+    background: rgb(var(--mdui-color-primary) / 0.5);
+}
+
+/* 行内代码：主色调淡背景 */
+.article-content code {
+    background-color: rgb(var(--mdui-color-primary-container) / 0.45);
+    color: rgb(var(--mdui-color-on-primary-container));
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-family: var(--mdui-font-family-mono);
+    word-break: break-word;
+    font-size: 0.875em;
+}
+
+/* 引用块：圆角 + 主色淡底 + 图标感 */
+.article-content blockquote {
+    position: relative;
+    border-left: 4px solid rgb(var(--mdui-color-primary));
+    border-radius: 12px;
+    padding: 14px 18px 14px 22px;
+    margin: 18px 0;
+    background-color: rgb(var(--mdui-color-primary-container) / 0.35);
+    color: rgb(var(--mdui-color-on-surface));
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.article-content blockquote p {
+    margin-bottom: 0;
+}
+
+/* 分隔线 */
+.article-content hr {
+    border: none;
+    height: 1px;
+    margin: 2em 0;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(var(--mdui-color-outline), 0.4),
+        transparent);
+}
+
+/* 表格美化 */
+.article-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: block;
+    overflow-x: auto;
+}
+
+.article-content thead {
+    background-color: rgb(var(--mdui-color-primary-container));
+    color: rgb(var(--mdui-color-on-primary-container));
+}
+
+.article-content th,
+.article-content td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(var(--mdui-color-outline-variant), 0.6);
+}
+
+.article-content tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.article-content tbody tr:nth-child(even) {
+    background-color: rgb(var(--mdui-color-surface-container) / 0.5);
+}
+
+.article-content tbody tr:hover {
+    background-color: rgb(var(--mdui-color-surface-container-high));
+}
+
+.article-content tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* 图片圆角 + 阴影 */
+.article-content img {
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.article-content img:hover {
+    transform: scale(1.01);
+}
+
+/* 链接：下划线动画 */
+.article-content a {
+    color: rgb(var(--mdui-color-primary));
+    text-decoration: none;
+    border-bottom: 1px solid rgba(var(--mdui-color-primary), 0.4);
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.article-content a:hover {
+    color: rgb(var(--mdui-color-tertiary));
+    border-bottom-color: rgb(var(--mdui-color-tertiary));
+}
+
+.post-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 1rem 0;
+}
+
+.nav-button {
+    flex: 1;
+    text-align: center;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: rgb(var(--mdui-color-surface-container));
+    color: rgb(var(--mdui-color-on-surface));
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.nav-button:hover {
+    background-color: rgb(var(--mdui-color-surface-container-high));
+    transform: translateY(-2px);
+}
+
+.nav-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.nav-button.disabled:hover {
+    background-color: rgb(var(--mdui-color-surface-container));
+    transform: none;
+}
+
+.nav-label {
+    font-size: 0.875rem;
+    color: rgb(var(--mdui-color-on-surface-variant));
+}
+
+.nav-title {
+    font-weight: 500;
+}
+
+/* 平板设备 */
+@media (max-width: 1024px) {
+    .post-container {
+        padding: 2rem 24px;
+        gap: 20px;
+    }
+    
+    .post-card-wide,
+    .post-card-comment,
+    .post-card-nav {
+        padding: 2rem;
+    }
+}
+
+/* 手机设备 */
+@media (max-width: 768px) {
+    .post-container {
+        padding: 24px 16px;
+        gap: 16px;
+    }
+    
+    .post-card-wide {
+        padding: 1.5rem;
+    }
+    
+    .post-card-comment,
+    .post-card-nav {
+        padding: 1.5rem;
+    }
+    
+    .post-navigation {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    /* 移动端代码块 */
+    .mac-code-block {
+        margin: 1em 0;
+        border-radius: 8px;
+    }
+    
+    .mac-code-header {
+        padding: 8px 12px;
+    }
+    
+    .article-content .mac-code-block .gutter {
+        padding: 12px 8px 12px 12px;
+    }
+    
+    .article-content .mac-code-block .code,
+    .article-content .mac-code-block > .mac-code-body > pre {
+        padding: 12px;
+    }
+    
+    .article-content .mac-code-block .gutter pre,
+    .article-content .mac-code-block .code pre,
+    .article-content .mac-code-block > .mac-code-body > pre {
+        font-size: 0.8125rem;
+    }
+    
+    .article-content .mac-code-block pre::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .article-content {
+        font-size: 0.9375rem;
+    }
+}
+
+/* 小屏手机 */
+@media (max-width: 480px) {
+    .post-container {
+        padding: 20px 12px;
+        gap: 12px;
+    }
+    
+    .post-card-wide,
+    .post-card-comment,
+    .post-card-nav {
+        padding: 1rem;
+        border-radius: 16px;
+    }
+    
+    .article-content .mac-code-block .gutter {
+        padding: 10px 8px 10px 10px;
+    }
+    
+    .article-content .mac-code-block .code,
+    .article-content .mac-code-block > .mac-code-body > pre {
+        padding: 10px;
+    }
+    
+    .article-content .mac-code-block .gutter pre,
+    .article-content .mac-code-block .code pre,
+    .article-content .mac-code-block > .mac-code-body > pre {
+        font-size: 0.75rem;
+    }
+    
+    .article-content ul,
+    .article-content ol {
+        padding-left: 24px;
+    }
+    
+    .mac-code-header {
+        padding: 6px 10px;
+    }
+    
+    .mac-code-dot {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .mac-code-title {
+        font-size: 0.72rem;
+    }
+}
+
+/* =====================================================
+   macOS 风格代码块（重构版）
+   支持 Hexo highlight.js 输出的 figure.highlight 结构
+   ===================================================== */
+.mac-code-block {
+    margin: 1.6em 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgb(var(--mdui-color-surface-container-high));
+    border: 1px solid rgba(var(--mdui-color-outline), 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+    position: relative;
+}
+
+.mac-code-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgb(var(--mdui-color-surface-container-highest));
+    border-bottom: 1px solid rgba(var(--mdui-color-outline-variant), 0.5);
+    position: relative;
+}
+
+/* 三个交通灯圆点 */
+.mac-code-dots {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.mac-code-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.mac-code-dot.red { background: #ff5f57; }
+.mac-code-dot.yellow { background: #febc2e; }
+.mac-code-dot.green { background: #28c840; }
+
+/* 居中语言标题 */
+.mac-code-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    font-family: var(--mdui-font-family);
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* 右侧操作按钮 */
+.mac-code-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.mac-code-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    padding: 0;
+}
+
+.mac-code-btn:hover {
+    background: rgb(var(--mdui-color-surface-container));
+    color: rgb(var(--mdui-color-primary));
+}
+
+.mac-code-btn.copied {
+    color: rgb(var(--mdui-color-success));
+}
+
+.mac-code-btn mdui-icon {
+    font-size: 18px;
+}
+
+/* 代码主体区 */
+.mac-code-body {
+    overflow: hidden;
+}
+
+/* 重置 article-content 通用表格样式对代码表格的干扰 */
+.article-content .mac-code-block figure {
+    margin: 0;
+}
+
+.article-content .mac-code-block table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.article-content .mac-code-block table thead,
+.article-content .mac-code-block table th,
+.article-content .mac-code-block table td {
+    background: transparent;
+    color: inherit;
+    border-bottom: none;
+    padding: 0;
+}
+
+.article-content .mac-code-block tbody tr,
+.article-content .mac-code-block tbody tr:nth-child(even),
+.article-content .mac-code-block tbody tr:hover {
+    background: transparent;
+}
+
+/* 行号列 */
+.article-content .mac-code-block .gutter {
+    background: rgb(var(--mdui-color-surface-container));
+    border-right: 1px solid rgba(var(--mdui-color-outline-variant), 0.4);
+    padding: 14px 8px 14px 14px;
+    text-align: right;
+    user-select: none;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.article-content .mac-code-block .gutter pre {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 0;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    opacity: 0.6;
+    font-family: var(--mdui-font-family-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+/* 代码列 */
+.article-content .mac-code-block .code {
+    padding: 14px 16px;
+    vertical-align: top;
+}
+
+.article-content .mac-code-block .code pre {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    margin: 0;
+    overflow-x: auto;
+    font-family: var(--mdui-font-family-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgb(var(--mdui-color-on-surface));
+}
+
+/* 裸 pre（未走 highlight.js 的代码）回退 */
+.article-content .mac-code-block > .mac-code-body > pre {
+    margin: 0;
+    padding: 14px 16px;
+    background: transparent !important;
+    border-radius: 0 !important;
+    overflow-x: auto;
+    font-family: var(--mdui-font-family-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgb(var(--mdui-color-on-surface));
+}
+
+/* 横向滚动条 */
+.article-content .mac-code-block pre {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--mdui-color-outline-variant)) transparent;
+}
+
+.article-content .mac-code-block pre::-webkit-scrollbar {
+    height: 8px;
+}
+
+.article-content .mac-code-block pre::-webkit-scrollbar-thumb {
+    background: rgb(var(--mdui-color-outline-variant));
+    border-radius: 4px;
+}
+
+.article-content .mac-code-block pre::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--mdui-color-outline));
+}
+
+/* Hexo highlight 行标记 */
+.article-content .mac-code-block .marked-line {
+    background: rgb(var(--mdui-color-primary) / 0.08);
+    display: block;
+    margin: 0 -16px;
+    padding: 0 16px;
+}
+
+/* 折叠状态 */
+.mac-code-block.is-collapsed .mac-code-body {
+    display: none;
+}
+
+/* 代码块内链接不上色 */
+.article-content .mac-code-block a {
+    border-bottom: none;
+}
+
+/* =====================================================
+   Markdown 格式补全
+   ===================================================== */
+
+/* h5 / h6 */
+.article-content h5,
+.article-content h6 {
+    color: rgb(var(--mdui-color-primary));
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    font-weight: 500;
+}
+
+.article-content h5 { font-size: 1.05rem; }
+.article-content h6 { font-size: 0.95rem; opacity: 0.85; }
+
+/* 加粗 / 斜体 / 删除线 */
+.article-content strong {
+    font-weight: 600;
+    color: rgb(var(--mdui-color-on-surface));
+}
+
+.article-content em {
+    font-style: italic;
+}
+
+.article-content del {
+    opacity: 0.6;
+}
+
+/* 键盘按键 */
+.article-content kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    font-family: var(--mdui-font-family-mono);
+    font-size: 0.8em;
+    line-height: 1.4;
+    color: rgb(var(--mdui-color-on-surface));
+    background: rgb(var(--mdui-color-surface-container-highest));
+    border: 1px solid rgba(var(--mdui-color-outline), 0.4);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* 高亮标记 */
+.article-content mark {
+    background: rgb(var(--mdui-color-tertiary-container));
+    color: rgb(var(--mdui-color-on-tertiary-container));
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+/* 上下标 */
+.article-content sup,
+.article-content sub {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+.article-content sup { top: -0.5em; }
+.article-content sub { bottom: -0.25em; }
+
+/* 任务列表（GFM task list） */
+.article-content ul.contains-task-list,
+.article-content li.task-list-item {
+    list-style: none;
+}
+
+.article-content li.task-list-item {
+    padding-left: 0;
+    margin-left: -18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.article-content input[type="checkbox"].task-list-item-checkbox {
+    margin: 0.35em 0 0 0;
+    flex-shrink: 0;
+    accent-color: rgb(var(--mdui-color-primary));
+    width: 16px;
+    height: 16px;
+    cursor: default;
+}
+
+/* 嵌套列表缩进 */
+.article-content ul ul,
+.article-content ol ol,
+.article-content ul ol,
+.article-content ol ul {
+    margin: 6px 0 0 0;
+}
+
+/* 定义列表 */
+.article-content dl {
+    margin: 1em 0;
+    padding: 12px 18px;
+    background: rgb(var(--mdui-color-surface-container) / 0.5);
+    border-radius: 12px;
+}
+
+.article-content dt {
+    font-weight: 600;
+    color: rgb(var(--mdui-color-primary));
+    margin-top: 10px;
+}
+
+.article-content dt:first-child {
+    margin-top: 0;
+}
+
+.article-content dd {
+    margin: 4px 0 0 0;
+    padding-left: 16px;
+    color: rgb(var(--mdui-color-on-surface-variant));
+    line-height: 1.7;
+}
+
+/* 引用块内的列表 */
+.article-content blockquote ul,
+.article-content blockquote ol {
+    margin: 8px 0 0 0;
+}
+
+/* 图片标题 */
+.article-content .caption {
+    color: rgb(var(--mdui-color-on-surface-variant));
+    display: block;
+    font-size: 0.85em;
+    margin-top: 0.4em;
+    text-align: center;
+    opacity: 0.8;
+}
+
+/* 脚注 */
+.article-content .footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid rgba(var(--mdui-color-outline-variant), 0.6);
+    font-size: 0.875em;
+    color: rgb(var(--mdui-color-on-surface-variant));
+}
+
+.article-content .footnote-ref a,
+.article-content .footnote a {
+    border-bottom: none;
+}
+#comment-list { margin-bottom: 20px; }
+.comment-item { border-bottom: 1px solid rgba(0,0,0,0.1); padding: 12px 0; }
+.comment-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.comment-header span { color: #999; font-size: 12px; }
+.comment-input, .comment-textarea {
+  width: 100%; margin: 8px 0; padding: 10px;
+  border: 1px solid #ddd; border-radius: 6px;
+  font-size: 14px;
+}
+.comment-textarea { height: 80px; resize: vertical; }
+.comment-btn {
+  background: rgb(var(--mdui-color-primary));
+  color: white; border: none; padding: 10px 20px;
+  border-radius: 6px; cursor: pointer;
+}
+</style>
+
+<%
+  const _plainText = strip_html(page.content);
+  const _wordCount = _plainText ? _plainText.length : 0;
+  const _readTime = Math.max(1, Math.ceil(_wordCount / 300));
+%>
+
+<!-- 阅读进度条 -->
+<div class="reading-progress-bar" id="reading-progress-bar"></div>
+
+<mdui-layout-main>
+    <%- include('widgets/banner', {titleText1: page.title, titleText2: ''}) %>
+
+    <div class="post-container">
+        <!-- 内容卡片 -->
+        <mdui-card variant="filled" class="post-card-wide">
+            <mdui-card-content>
+                <div class="article-content">
+                    <%- page.content %>
+                </div>
+            </mdui-card-content>
+        </mdui-card>
+
+        <!-- 上一篇/下一篇导航 -->
+        <mdui-card variant="filled" class="post-card-nav">
+            <mdui-card-content>
+                <div class="post-navigation">
+                    <% if (page.prev) { %>
+                        <a href="<%= url_for(page.prev.path) %>" class="nav-button">
+                            <span class="nav-label"><%= __('post.prev') %></span>
+                            <span class="nav-title"><%= page.prev.title %></span>
+                        </a>
+                    <% } else { %>
+                        <a class="nav-button disabled">
+                            <span class="nav-label"><%= __('post.prev') %></span>
+                            <span class="nav-title"><%= __('post.none') %></span>
+                        </a>
+                    <% } %>
+                    
+                    <% if (page.next) { %>
+                        <a href="<%= url_for(page.next.path) %>" class="nav-button">
+                            <span class="nav-label"><%= __('post.next') %></span>
+                            <span class="nav-title"><%= page.next.title %></span>
+                        </a>
+                    <% } else { %>
+                        <a class="nav-button disabled">
+                            <span class="nav-label"><%= __('post.next') %></span>
+                            <span class="nav-title"><%= __('post.none') %></span>
+                        </a>
+                    <% } %>
+                </div>
+            </mdui-card-content>
+        </mdui-card>
+
+        <!-- 评论卡片 -->
+        <mdui-card variant="filled" class="post-card-comment">
+            <mdui-card-content>
+                <mdui-typography variant="h5" style="margin-bottom: 1.5rem; text-align: center; color: rgb(var(--mdui-color-primary));">
+                    <%= __('post.comment') %>
+                </mdui-typography>
+
+                <!-- 评论列表 -->
+                <div id="comment-list">加载中...</div>
+                <!-- 浏览量  -->
+                <div id="view-count" style="text-align:center;color:#999;margin:10px 0;">
+                    浏览量：<span id="view-num">-</span>
+                </div>
+                <!-- 评论表单 -->
+                <div class="comment-form">
+                    <input id="comment-nickname" placeholder="昵称" class="comment-input">
+                    <textarea id="comment-content" placeholder="评论内容" class="comment-textarea"></textarea>
+                    <button onclick="submitComment()" class="comment-btn">提交评论</button>
+                </div>
+            </mdui-card-content>
+        </mdui-card>
+    </div>
+</mdui-layout-main>
+
+<!-- macOS 风格代码块（外部脚本，defer 延迟加载） -->
+<script defer src="/js/post-codeblock.js"></script>
+
+<script>
+    const articlePath = window.location.pathname;
+    const API = 'http://localhost:8080';
+    //加载评论
+    fetch(`${API}/api/comments?articlePath=${encodeURIComponent(articlePath)}`)
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('comment-list');
+        if (!data.data || data.data.length === 0) {
+          list.innerHTML = '<p style="text-align:center;color:#999;">暂无评论</p>';
+          return;
+        }
+        list.innerHTML = data.data.map(c =>
+          `<div class="comment-item">
+            <div class="comment-header">
+              <b>${c.nickname}</b>
+              <span>${c.createTime || ''}</span>
+            </div>
+            <p>${c.content}</p>
+          </div>`
+        ).join('');
+      })
+      .catch(err => {
+        document.getElementById('comment-list').innerHTML = '<p>评论加载失败</p>';
+      });
+
+//       提交评论
+      function submitComment() {
+        const nickname = document.getElementById('comment-nickname').value;
+        const content = document.getElementById('comment-content').value;
+        if (!nickname || !content) {
+          alert('请填写昵称和内容');
+          return;
+        }
+        fetch(`${API}/api/comments`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            articlePath: articlePath,
+            nickname: nickname,
+            content: content
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.code === 200) {
+            alert('评论已提交，等待审核');
+            location.reload();
+          } else {
+            alert('提交失败：' + data.message);
+          }
+        })
+        .catch(err => {
+          alert('提交失败，请稍后再试');
+        });
+      }
+  // 浏览量 +1
+  fetch(`${API}/api/articles/view?articlePath=${encodeURIComponent(articlePath)}`, {
+    method: 'POST'
+  }).then(res => res.json())
+    .then(data => {
+      document.getElementById('view-num').innerText = data.data;
+    });
+// 阅读进度条（使用 requestAnimationFrame 节流，性能友好）
+(function () {
+    var progressBar = document.getElementById('reading-progress-bar');
+    if (!progressBar) return;
+
+    var ticking = false;
+
+    function update() {
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        var progress = docHeight > 0 ? (scrollTop / docHeight) : 0;
+        if (progress < 0) progress = 0;
+        if (progress > 1) progress = 1;
+
+        progressBar.style.width = (progress * 100) + '%';
+
+        ticking = false;
+    }
+
+    function onScroll() {
+        if (!ticking) {
+            window.requestAnimationFrame(update);
+            ticking = true;
+        }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+})();
+</script>

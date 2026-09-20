@@ -1,0 +1,45 @@
+###登录
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "123456"
+}
+### 带 token 请求
+GET http://localhost:8080/api/hello
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJhZG1pbiIsImlhdCI6MTc4OTc4NzMyMywiZXhwIjoxNzkwMzkyMTIzfQ.jdx2Wj26d_5K6TvMj2fHbjuLeTp_xt2QFMw1EpHAiJs
+### 文章列表（不需要 token）
+GET http://localhost:8080/api/articles?page=1&size=10
+### 文章详情（不需要 token）
+GET http://localhost:8080/api/articles/1
+### 新增文章（需要 token）
+POST http://localhost:8080/api/articles
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJhZG1pbiIsImlhdCI6MTc4OTc4NzMyMywiZXhwIjoxNzkwMzkyMTIzfQ.jdx2Wj26d_5K6TvMj2fHbjuLeTp_xt2QFMw1EpHAiJs
+
+{
+  "title": "测试文章",
+  "summary": "摘要",
+  "content": "内容",
+  "categoryId": 1,
+  "authorId": 1,
+  "status": 1,
+  "tagIds": [1, 2]
+}
+### 标签
+GET http://localhost:8080/api/tags
+### 提交评论
+POST http://localhost:8080/api/comments
+Content-Type: application/json
+
+{
+  "articlePath": "/2026/09/19/hello/",
+  "nickname": "游客",
+  "content": "测试评论"
+}
+###查评论
+GET http://localhost:8080/api/comments?articlePath=/2026/09/19/hello/
+###审核评论
+PUT http://localhost:8080/api/admin/comments/1?status=1
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJhZG1pbiIsImlhdCI6MTc4OTc4NzMyMywiZXhwIjoxNzkwMzkyMTIzfQ.jdx2Wj26d_5K6TvMj2fHbjuLeTp_xt2QFMw1EpHAiJs
