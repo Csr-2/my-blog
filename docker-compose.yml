@@ -3,7 +3,7 @@ services:
     image: mysql:8
     container_name: blog-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: csr20051122
       MYSQL_DATABASE: blog
     ports:
       - "3307:3306"
@@ -24,6 +24,8 @@ services:
     depends_on:
       - mysql
       - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
 
   nginx:
     image: nginx
